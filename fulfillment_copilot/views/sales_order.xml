@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_action_sale_order_tree" model="ir.ui.view">
+        <field name="name">bryo.copilot.tree</field>
+        <field name="model">bryo.copilot</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="order_name"></field>
+                <field name="order_date"/>
+                <field name="order_status"/>
+
+            </tree>
+<!--            <button name="getdata" string="Get Data" type="object" class="btn_primary"/>-->
+        </field>
+    </record>
+
+<!--    test 2-->
+<!--    <record id="view_action_sale_order_tree" model="ir.ui.view">-->
+<!--        <field name="name">sale.order.table.report.tree</field>-->
+<!--        <field name="model">sale.order.table.report</field>-->
+<!--        <field name="arch" type="xml">-->
+<!--&lt;!&ndash;            <tree>&ndash;&gt;-->
+<!--&lt;!&ndash;                <field name="product_id"></field>&ndash;&gt;-->
+<!--&lt;!&ndash;                <field name="quantity"></field>&ndash;&gt;-->
+<!--&lt;!&ndash;                <field name="partner_id"></field>&ndash;&gt;-->
+<!--&lt;!&ndash;            </tree>&ndash;&gt;-->
+<!--            <button name="print_data" string="Get Data" type="object" class="btn_primary"/>-->
+<!--        </field>-->
+<!--    </record>-->
+
+    <record id="view_action_sale_order" model="ir.actions.act_window">
+        <field name="name">Sales Orders Bryo</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">bryo.copilot</field>
+        <field name="view_mode">tree,form</field>
+<!--            <button name="getdata" string="Get Data" type="object" class="btn_primary"/>-->
+<!--        <field name="context">{"search_default_group_by_partner": 1}</field>-->
+    </record>
+
+    <menuitem
+            id="sales_order_pending"
+            name="Pending"
+            parent="sales_order_root"
+            action="view_action_sale_order"
+            sequence="10"/>
+</odoo>

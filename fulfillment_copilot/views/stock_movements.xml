@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_action_stock_movements_table" model="ir.actions.act_window">
+        <field name="name">Stock Movements Table</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">stock.movements.view</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_action_stock_movements_table_tree" model="ir.ui.view">
+        <field name="name">stock.movements.view.tree</field>
+        <field name="model">stock.movements.view</field>
+        <field name="arch" type="xml">
+                <tree>
+                    <field name="sale_order"/>
+                    <field name="fulfillment_id"/>
+                    <field name="stock_move_id"/>
+                    <field name="stock_move_state"/>
+                    <field name="move_create_date"/>
+                    <field name="product_id"/>
+                    <field name="movement_order_quantity"/>
+                    <field name="reserved_quantity"/>
+                    <field name="moved_quantity"/>
+                    <field name="move_write_date"/>
+                    <field name="move_location_origin"/>
+                    <field name="move_location_destination"/>
+
+                </tree>
+        </field>
+    </record>
+
+    <menuitem
+            id="stock_movements_table_root"
+            name="Stock Movements"
+            parent="order_tracking_root"
+            action="view_action_stock_movements_table"
+            sequence="60"/>
+</odoo>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <menuitem id="sales_order_root" name="SO_custom" sequence="10"/>
+    <menuitem id="sales_order_confirmed" name="Confirmed" parent="sales_order_root" sequence="20"/>
+</odoo>

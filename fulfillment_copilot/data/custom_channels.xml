@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record model="mail.channel" id="channel_bryo_copilot">
+        <field name="name">Bryo copilot suggestions</field>
+        <field name="description">Recommendations by the bryo copilot</field>
+<!--        <field name="public">groups</field>-->
+        <field name="group_public_id" ref="project.group_project_manager"/>
+        <field name="group_ids" eval="[Command.link(ref('project.group_project_manager'))]"/>
+    </record>
+</odoo>

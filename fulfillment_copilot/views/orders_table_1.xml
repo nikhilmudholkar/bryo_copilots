@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_action_sale_order_table_1" model="ir.actions.act_window">
+        <field name="name">Sales Orders Table 1</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sale.order.view</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_action_sale_order_table_1_tree" model="ir.ui.view">
+        <field name="name">sale.order.table.report.1.tree</field>
+        <field name="model">sale.order.view</field>
+        <field name="arch" type="xml">
+                <tree>
+                    <field name="sale_order"></field>
+                    <field name="ordered_date"></field>
+                    <field name="due_date"></field>
+                    <field name="created_by"></field>
+                </tree>
+        </field>
+    </record>
+
+    <menuitem
+            id="sales_order_table_root"
+            name="Sales Orders"
+            parent="order_tracking_root"
+            action="view_action_sale_order_table_1"
+            sequence="20"/>
+</odoo>

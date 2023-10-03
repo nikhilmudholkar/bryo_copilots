@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_action_copilot_suggestions" model="ir.actions.act_window">
+        <field name="name">AI Copilot Suggestions</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">copilot.suggestions.view</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_action_copilot_suggestions_tree" model="ir.ui.view">
+        <field name="name">copilot.suggestions.view.tree</field>
+        <field name="model">copilot.suggestions.view</field>
+        <field name="arch" type="xml">
+                <tree>
+<!--                    <header>-->
+<!--                        insert a space to the left of button-->
+<!--                        insert a space to the left of button-->
+<!--                        <separator string=" "/>-->
+<!--                        <button name="get_suggestions" string="Get AI recommendations" type="object"/>-->
+<!--                    </header>-->
+                    <field name="sales_order_id"/>
+                    <field name="recommendation"/>
+                    <field name="recommendation_time"/>
+                </tree>
+        </field>
+    </record>
+
+    <menuitem
+            id="copilot_suggestions_root"
+            name="AI Copilot Suggestions"
+            parent="order_tracking_root"
+            action="view_action_copilot_suggestions"
+            sequence="40"/>
+</odoo>

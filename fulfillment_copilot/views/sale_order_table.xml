@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_action_sale_order_table" model="ir.actions.act_window">
+        <field name="name">Select orders for AI recommendations</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">open.sale.order.table.report</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <record id="view_action_sale_order_table_tree" model="ir.ui.view">
+        <field name="name">open.sale.order.table.report.tree</field>
+        <field name="model">open.sale.order.table.report</field>
+        <field name="arch" type="xml">
+<!--            <form string="My Form">-->
+<!--                <button name="triggerllm" string="Get AI recommendations" type="object" class="btn_primary"/>-->
+<!--            </form>-->
+                <tree>
+                    <header>
+<!--                        insert a space to the left of button-->
+<!--                        insert a space to the left of button-->
+<!--                        <separator string=" "/>-->
+                        <button name="triggerllm" string="Get AI recommendations" type="object" class="oe_highlight"/>
+                    </header>
+                    <field name="order_id"></field>
+<!--                    <field name="time_to_deliver"></field>-->
+<!--                    <field name="time_to_create_delivery_order"></field>-->
+<!--                    <field name="time_to_pick"></field>-->
+<!--                    <button name="triggerllm" string="Get AI recommendations" type="object" class="btn_primary"/>-->
+                </tree>
+        </field>
+
+    </record>
+
+
+<!--    <button name="my_new_button">-->
+<!--        <label>My New Button</label>-->
+<!--        <action>my_action_id</action>-->
+<!--    </button>-->
+
+    <menuitem
+            id="open_order_table_root"
+            name="Monitoring and AI dashboard"
+            parent="order_tracking_root"
+            action="view_action_sale_order_table"
+            sequence="10"/>
+</odoo>

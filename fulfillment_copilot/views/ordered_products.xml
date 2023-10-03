@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_action_ordered_products_table" model="ir.actions.act_window">
+        <field name="name">Ordered Products Table 1</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">ordered.products.view</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_action_ordered_products_table_tree" model="ir.ui.view">
+        <field name="name">ordered.products.view.tree</field>
+        <field name="model">ordered.products.view</field>
+        <field name="arch" type="xml">
+                <tree>
+                    <field name="sale_order"/>
+                    <field name="product_id"/>
+                    <field name="ordered_quantity"/>
+                </tree>
+        </field>
+    </record>
+
+    <menuitem
+            id="ordered_products_table_root"
+            name="Ordered Products"
+            parent="order_tracking_root"
+            action="view_action_ordered_products_table"
+            sequence="30"/>
+</odoo>
