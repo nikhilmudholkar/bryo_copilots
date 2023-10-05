@@ -7,6 +7,7 @@ import odoo
 from odoo import api, fields, models, _
 from .create_llm_prompt import askai, remove_tags, askaileadtimeimpact, askaidelayedproducts, \
     askaidelayedmanufacturingproducts, uploadpdftollm, create_message_draft
+from .mail_channel_clients import Channel_clients
 from .query_computations import calculate_impacted_saleorders, calculate_impacted_manufacturing_orders
 from odoo.exceptions import UserError
 
@@ -27,17 +28,11 @@ class Channel(models.Model):
     impacted_so = fields.Char(string="Impacted SO", default="")
     impacted_mo = fields.Char(string="Impacted MO", default="")
 
-    # @api.model
-    # def init(self):
-    #     super().init()
-    #
-    #     # Save the variable into self
-    #     self.process_tracker = 'process_started'
 
     # The if conditions are there to stop the recursion! Research about why they are there and how can we remove them
     def _notify_thread(self, message, msg_vals=False, json=None, **kwargs):
         # print(self.process_tracker)
-        # print(self.unstructured_data)
+        print("message from mail_channel.py", self.unstructured_data)
         if self.process_tracker == 'process_completed':
             self.process_tracker = 'process_started'
         rdata = super(Channel, self)._notify_thread(message, msg_vals=msg_vals, **kwargs)
@@ -45,14 +40,17 @@ class Channel(models.Model):
         bryo_channels = self.env['mail.channel'].search([('name', 'ilike', '%Bryo%')])
         bryo_channel_ids = [channel.id for channel in bryo_channels]
 
+        client_channels = self.env['mail.channel'].search([('name', 'ilike', '%Client%')])
+        client_channel_ids = [channel.id for channel in client_channels]
+
         copilot_user = self.env.ref("lead_time_copilot.copilot_user")
         # print id of copilot user
-        print("copilot_user_id: ", copilot_user.id)
-        print("OdooBot user id: ", self.env["res.partner"].search([('display_name', '=', 'OdooBot')]))
+        # print("copilot_user_id: ", copilot_user.id)
+        # print("OdooBot user id: ", self.env["res.partner"].search([('display_name', '=', 'OdooBot')]))
         # print(self.env['odoo.bot.user'].sudo().search([('name', '=', 'OdooBot')])[0])
         odoo_bot_user = self.env.ref("base.user_root")
         # odoo_bot_author_id =
-        print("odoo_bot_user: ", odoo_bot_user.id)
+        # print("odoo_bot_user: ", odoo_bot_user.id)
         partner_copilot = self.env.ref("lead_time_copilot.copilot_user_partner")
         author_id = msg_vals.get('author_id')
         copilot_name = str(partner_copilot.name or '') + ', '
@@ -97,8 +95,6 @@ class Channel(models.Model):
             try:
                 messages = self.message_ids
                 print("latest message from", messages[0].author_id.name)
-
-
                 latest_message = remove_tags(messages[0].body)
                 latest_author_id = messages[0].author_id.id
                 latest_channel_name = messages[0].record_name
@@ -623,6 +619,14 @@ class Channel(models.Model):
                     latest_channel.with_user(odoo_bot_user).message_post(body="exit", message_type='comment',
                                                                          subtype_xmlid='mail.mt_comment')
 
+            except Exception as e:
+                raise UserError(_(e))
+
+        elif author_id != partner_copilot.id and msg_vals.get('model', '') == 'mail.channel' and msg_vals.get('res_id',
+                                                                                                              0) in client_channel_ids:
+            try:
+                Channel_clients.notify_thread(self, "latest_message")
+                print("message from mail_channel.py from inside for loop", self.unstructured_data)
             except Exception as e:
                 raise UserError(_(e))
         return rdata
