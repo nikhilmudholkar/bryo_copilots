@@ -40,8 +40,8 @@ class Channel(models.Model):
         bryo_channels = self.env['mail.channel'].search([('name', 'ilike', '%Bryo%')])
         bryo_channel_ids = [channel.id for channel in bryo_channels]
 
-        client_channels = self.env['mail.channel'].search([('name', 'ilike', '%Client%')])
-        client_channel_ids = [channel.id for channel in client_channels]
+        # client_channels = self.env['mail.channel'].search([('name', 'ilike', '%Client%')])
+        # client_channel_ids = [channel.id for channel in client_channels]
 
         copilot_user = self.env.ref("lead_time_copilot.copilot_user")
         # print id of copilot user
@@ -622,11 +622,11 @@ class Channel(models.Model):
             except Exception as e:
                 raise UserError(_(e))
 
-        elif author_id != partner_copilot.id and msg_vals.get('model', '') == 'mail.channel' and msg_vals.get('res_id',
-                                                                                                              0) in client_channel_ids:
-            try:
-                Channel_clients.notify_thread(self, "latest_message")
-                print("message from mail_channel.py from inside for loop", self.unstructured_data)
-            except Exception as e:
-                raise UserError(_(e))
+        # elif author_id != partner_copilot.id and msg_vals.get('model', '') == 'mail.channel' and msg_vals.get('res_id',
+        #                                                                                                       0) in client_channel_ids:
+        #     try:
+        #         Channel_clients.notify_thread(self, "latest_message")
+        #         print("message from mail_channel.py from inside for loop", self.unstructured_data)
+        #     except Exception as e:
+        #         raise UserError(_(e))
         return rdata
