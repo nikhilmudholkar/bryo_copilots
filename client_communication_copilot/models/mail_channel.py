@@ -225,7 +225,7 @@ class Channel(models.Model):
                         order_ids = res_df['id'].tolist()
 
                         # temporary fix because data is not available
-                        order_ids = ["S00040", "S00044", "S00032"]
+                        # order_ids = ["S00040", "S00044", "S00032"]
                         print("order_ids: ", order_ids)
                         for order_id in order_ids:
                             sale_order_tracking = track_sale_orders(self._cr, order_id)
