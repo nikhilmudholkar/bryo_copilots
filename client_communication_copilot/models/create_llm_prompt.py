@@ -150,6 +150,10 @@ def identify_client(message, client_df):
 
 def identify_sale_orders(message, sale_order_df):
     context = create_llm_context()
+    # rename shipping_address in client_df to shipping_address_old
+    sale_order_df.rename(columns={'shipping_address': 'shipping_address_old'}, inplace=True)
+    # print("########")
+    # print(sale_order_df)
     sale_order_df_str = convert_dataframe_to_string(sale_order_df)
     url = "http://35.92.128.67:8000/askaiaboutsaleorders"
     payload = {
