@@ -151,6 +151,18 @@ def identify_client(message, client_df):
 def identify_sale_orders(message, sale_order_df):
     context = create_llm_context()
     # rename shipping_address in client_df to shipping_address_old
+    # remove time from date fields create_date, date_order, commitment_date
+    # sale_order_df['create_date'] = sale_order_df['create_date'].dt.date
+    # sale_order_df['date_order'] = sale_order_df['date_order'].dt.date
+    # sale_order_df['commitment_date'] = sale_order_df['commitment_date'].dt.date
+
+    sale_order_df['create_date'] = sale_order_df['create_date'].astype(str)
+    sale_order_df['create_date'] = sale_order_df['create_date'].str[:10]
+    sale_order_df['date_order'] = sale_order_df['date_order'].astype(str)
+    sale_order_df['date_order'] = sale_order_df['date_order'].str[:10]
+    sale_order_df['commitment_date'] = sale_order_df['commitment_date'].astype(str)
+    sale_order_df['commitment_date'] = sale_order_df['commitment_date'].str[:10]
+
     sale_order_df.rename(columns={'shipping_address': 'shipping_address_old'}, inplace=True)
     # print("########")
     # print(sale_order_df)

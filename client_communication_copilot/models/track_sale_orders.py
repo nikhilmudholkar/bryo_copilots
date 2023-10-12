@@ -53,7 +53,7 @@ def track_sale_orders(cursor, order_id):
 
     # get fulfillment table
     cursor.execute("""SELECT sale_order.name as sale_order,
-                        stock_picking.id as delivery_order,
+                        stock_picking.name as delivery_order,
                         stock_picking.state as delivery_state,
                         stock_picking.date_deadline as committed_date,
                         stock_picking.scheduled_date,
@@ -134,10 +134,10 @@ def track_sale_orders(cursor, order_id):
 
     # strip the time from all the datetime columns
     # convert the datetime columns to strings
-    df_stock_movements['picking_create_date'] = df_stock_movements['picking_create_date'].astype(str)
-    df_stock_movements['picking_create_date'] = df_stock_movements['picking_create_date'].str[:10]
-    df_stock_movements['picking_write_date'] = df_stock_movements['picking_write_date'].astype(str)
-    df_stock_movements['picking_write_date'] = df_stock_movements['picking_write_date'].str[:10]
+    df_stock_movements['delivery_order_create_date'] = df_stock_movements['delivery_order_create_date'].astype(str)
+    df_stock_movements['delivery_order_create_date'] = df_stock_movements['delivery_order_create_date'].str[:10]
+    df_stock_movements['delivery_write_date'] = df_stock_movements['delivery_write_date'].astype(str)
+    df_stock_movements['delivery_write_date'] = df_stock_movements['delivery_write_date'].str[:10]
     # print(df_stock_movements.dtypes)
 
     # get back_orders table
