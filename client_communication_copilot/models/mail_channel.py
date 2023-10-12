@@ -278,8 +278,12 @@ class Channel(models.Model):
                         res_df = pd.json_normalize(res_json["sale_orders"])
                         # check if res_df is not empty
                         # if not res_df.empty:
-                        res_df_html = res_df.to_html(index=False)
-                        latest_channel.with_user(copilot_user).message_post(body=res_df_html, message_type='comment',
+                        # select all columns except product_id, price_total, price_total_updated and save the new df as display_df
+                        display_df = res_df.drop(columns=['product_id', 'price_total', 'price_total_updated'])
+
+                        display_df_html = display_df.to_html(index=False)
+                        display_df_html = display_df_html.replace('<table>', '<table style="font-size: 1px;">')
+                        latest_channel.with_user(copilot_user).message_post(body=display_df_html, message_type='comment',
                                                                             subtype_xmlid='mail.mt_comment')
                         latest_channel.with_user(odoo_bot_user).message_post(
                             body="Do you want to track the state of these orders? Reply with 1 if you do",
