@@ -22,6 +22,29 @@ class Channel(models.Model):
     order_ids = fields.Char(string="Order IDs", default="order_ids")
     so_filters = fields.Char(string="SO Filters", default="so_filters")
 
+    def update_sale_order_line(self, sale_order_id, field_name, new_value):
+        sale_order = self.env['sale.order.line'].search([('order_id', '=', sale_order_id)])[0]
+        original_values = sale_order.read()[0]
+        sale_order[field_name] = new_value
+        sale_order.write({})
+
+    def update_stock_picking(self, stock_picking_id, field_name, new_value):
+        stock_picking = self.env['stock.picking'].search([('id', '=', stock_picking_id)])[0]
+        original_values = stock_picking.read()[0]
+        stock_picking[field_name] = new_value
+        stock_picking.write({})
+
+    def update_sale_order(self, sale_order_id, field_name, new_value):
+        sale_order = self.env['sale.order'].search([('id', '=', sale_order_id)])[0]
+        original_values = sale_order.read()[0]
+        sale_order[field_name] = new_value
+        sale_order.write({})
+
+    def revert_sale_order_values(sale_order, original_values):
+        for key in original_values.keys():
+            sale_order[key] = original_values[key]
+        sale_order.write({})
+        # sale_order.save()
     # this method in all the apps (client_communication_copilot and lead_time_copilot) is called when a message is posted in any channel
     def _notify_thread(self, message, msg_vals=False, json=None, **kwargs):
         print("inside notify message loop for clients with process tracker as ", self.process_tracker)
@@ -51,19 +74,19 @@ class Channel(models.Model):
                 attachment = latest_channel.message_ids.mapped('attachment_ids')[0]
                 # print("Attachment is present")
                 pdf_file = base64.decodebytes(attachment.datas)
-                # with open(
-                #         '/Users/nikhilmukholdar/Personal/fintel_labs/odoo_global/odoo/dev/lead_time_copilot/my_pdf_file_clients.pdf',
-                #         'wb') as f:
-                #     f.write(pdf_file)
-                # response = uploadpdftollm(
-                #     '/Users/nikhilmukholdar/Personal/fintel_labs/odoo_global/odoo/dev/lead_time_copilot/my_pdf_file_clients.pdf')
-
                 with open(
-                        '/opt/odoo/odoo16/addons/client_communication_copilot/my_pdf_file.pdf',
+                        '/Users/nikhilmukholdar/Personal/fintel_labs/odoo_global/odoo/dev/lead_time_copilot/my_pdf_file_clients.pdf',
                         'wb') as f:
                     f.write(pdf_file)
                 response = uploadpdftollm(
-                    '/opt/odoo/odoo16/addons/client_communication_copilot/my_pdf_file.pdf')
+                    '/Users/nikhilmukholdar/Personal/fintel_labs/odoo_global/odoo/dev/lead_time_copilot/my_pdf_file_clients.pdf')
+
+                # with open(
+                #         '/opt/odoo/odoo16/addons/client_communication_copilot/my_pdf_file.pdf',
+                #         'wb') as f:
+                #     f.write(pdf_file)
+                # response = uploadpdftollm(
+                #     '/opt/odoo/odoo16/addons/client_communication_copilot/my_pdf_file.pdf')
 
 
                 # latest_channel.with_user(copilot_user).message_post(body=response, message_type='comment',
@@ -167,9 +190,6 @@ class Channel(models.Model):
                         body="Thank you. Please wait while we fetch your sale orders. If AI responds nothing, ask it to fetch again",
                         message_type='comment',
                         subtype_xmlid='mail.mt_comment')
-
-
-
 
             if self.process_tracker == 'quote_or_so_identification_started':
                 if latest_message.lower != "1" and messages[0].author_id.name not in ['OdooBot', 'Copilot']:
@@ -296,12 +316,30 @@ class Channel(models.Model):
                         self.process_tracker = "sale_orders_identified"
 
                         # temporary fix because data is not available
-                        # order_ids = ["S00056", "S00055"]
-                        print("order_ids: ", order_ids)
-                        # else:
-                        #     latest_channel.with_user(copilot_user).message_post(body="No sale orders identified, trying again",
-                        #                                                         message_type='comment',
-                        #                                                         subtype_xmlid='mail.mt_comment')
+                        # order_ids = [24]
+                        # print("order_ids: ", order_ids)
+                        for order_id in order_ids:
+                            # remove all the S and O from order_id
+
+
+                            # update the quantity ordered
+                            updated_qty = res_df.loc[res_df['sale_order'] == order_id, 'qty_ordered_updated'].iloc[0]
+                            updated_price_unit = res_df.loc[res_df['sale_order'] == order_id, 'price_unit_updated'].iloc[0]
+                            updated_delivery_date = res_df.loc[res_df['sale_order'] == order_id, 'delivery_date'].iloc[0]
+                            # updated_price_total = res_df.loc[res_df['sale_order'] == order_id, 'price_total_updated'].iloc[0]
+
+                            # updated_qty = 100
+                            # updated_price_unit = 100
+                            # updated_price_total = 1
+                            order_id = order_id.replace("S", "")
+                            order_id = order_id.replace("0", "")
+
+                            order_id = int(order_id)
+                            self.update_sale_order_line(order_id, "product_uom_qty", updated_qty)
+                            self.update_sale_order_line(order_id, "price_unit", updated_price_unit)
+                            self.update_sale_order(order_id, "commitment_date", updated_delivery_date)
+                            # self.update_sale_order_line(order_id, "price_total", updated_price_total)
+                            print("sale order  values updated")
 
 
 
