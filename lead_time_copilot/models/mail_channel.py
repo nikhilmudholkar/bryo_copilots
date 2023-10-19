@@ -32,7 +32,7 @@ class Channel(models.Model):
     # The if conditions are there to stop the recursion! Research about why they are there and how can we remove them
     def _notify_thread(self, message, msg_vals=False, json=None, **kwargs):
         # print(self.process_tracker)
-        print("message from mail_channel.py", self.unstructured_data)
+        # print("message from mail_channel.py", self.unstructured_data)
         if self.process_tracker == 'process_completed':
             self.process_tracker = 'process_started'
         rdata = super(Channel, self)._notify_thread(message, msg_vals=msg_vals, **kwargs)
