@@ -1,5 +1,6 @@
 import base64
 # import json
+import re
 from datetime import datetime
 
 import pandas as pd
@@ -23,13 +24,27 @@ class Channel(models.Model):
     so_filters = fields.Char(string="SO Filters", default="so_filters")
     sale_order_revert = fields.Char(string="Sale Order Revert", default="")
     sale_order_line_revert = fields.Char(string="Sale Order Line Revert", default="")
+    original_sale_order = fields.Many2one('sale.order', string="Original Sale Order")
+    original_sale_order_line = fields.Many2one('sale.order.line', string="Original Sale Order Line")
+
 
     def save_orignal_sale_order(self, sale_order_id):
         sale_order = self.env['sale.order'].search([
             ('id', '=', sale_order_id)
         ])[0]
         original_values = sale_order.read()[0]
-        print("original_values", original_values)
+        self.sale_order_revert = str(original_values)
+
+
+    def save_orignal_sale_order_line(self, sale_order_id, product_id):
+        sale_order_line = self.env['sale.order.line'].search([
+            ('order_id', '=', sale_order_id),
+            ('product_id', '=', product_id)
+        ])[0]
+        print(sale_order_line.read()[0])
+        original_values = sale_order_line.read()[0]
+        self.sale_order_line_revert = self.sale_order_line_revert + "\n" + str(original_values)
+
 
 
     def update_sale_order_line(self, sale_order_id, product_id, field_name, new_value):
@@ -50,7 +65,7 @@ class Channel(models.Model):
         stock_picking[field_name] = new_value
         stock_picking.write({})
 
-    def update_sale_order(self, sale_order_id, product_id, field_name, new_value):
+    def update_sale_order(self, sale_order_id, field_name, new_value):
         sale_order = self.env['sale.order'].search([
             ('id', '=', sale_order_id)
         ])[0]
@@ -62,6 +77,9 @@ class Channel(models.Model):
         for key in original_values.keys():
             sale_order[key] = original_values[key]
         sale_order.write({})
+
+
+
         # sale_order.save()
     # this method in all the apps (client_communication_copilot and lead_time_copilot) is called when a message is posted in any channel
     def _notify_thread(self, message, msg_vals=False, json=None, **kwargs):
@@ -148,6 +166,9 @@ class Channel(models.Model):
                 self.ai_message = ''
                 self.purchase_orders = ''
                 self.rfq = False
+                self.sale_order_revert = ""
+                self.sale_order_line_revert = ""
+
                 print("process completed")
 
             if self.process_tracker == 'identify_client':
@@ -326,7 +347,6 @@ class Channel(models.Model):
                         # order_ids = ["S00032"]
                         self.order_ids = str(order_ids)
                         self.process_tracker = "sale_orders_identified"
-                        print(res_df)
 
 
             if self.process_tracker == "sale_orders_identified":
@@ -338,11 +358,11 @@ class Channel(models.Model):
                     print(res_df)
                     # convert res_df from string to pandas dataframe
                     # iterate through all unique sale orders in res_df
-                    # for sale_order in list(set(res_df['sale_order'].tolist())):
-                    #     print(sale_order)
-                    #     order_id = sale_order.replace("S", "")
-                    #     order_id = sale_order.replace("0", "")
-                    #     order_id = int(order_id)
+                    for sale_order in list(set(res_df['sale_order'].tolist())):
+                        sale_order = sale_order.replace("S", "")
+                        sale_order = sale_order.replace("0", "")
+                        sale_order = int(sale_order)
+                        self.save_orignal_sale_order(sale_order)
 
 
                     for index, row in res_df.iterrows():
@@ -351,9 +371,6 @@ class Channel(models.Model):
                         updated_qty = row['qty_ordered_updated']
                         updated_price_unit = row['price_unit_updated']
                         updated_delivery_date = row['delivery_date']
-
-                        print("updated_delivery_date type: ", type(updated_delivery_date))
-                        print(updated_delivery_date)
                         # check if the date is in '%m/%d/%Y' format
                         if "/" in updated_delivery_date:
                             # fix for this error in updated_delivery_date: time data '10/13/2023' does not match format '%Y-%m-%d'
@@ -362,15 +379,17 @@ class Channel(models.Model):
 
                         order_id = order_id.replace("S", "")
                         order_id = order_id.replace("0", "")
-
                         order_id = int(order_id)
+                        product_id = int(product_id)
+                        self.save_orignal_sale_order_line(order_id, product_id)
+
+
                         self.update_sale_order_line(order_id, product_id, "product_uom_qty", updated_qty)
                         self.update_sale_order_line(order_id, product_id, "price_unit", updated_price_unit)
-                        self.update_sale_order(order_id, product_id, "commitment_date", updated_delivery_date)
+                        self.update_sale_order(order_id, "commitment_date", updated_delivery_date)
                         # self.update_sale_order_line(order_id, "price_total", updated_price_total)
-                        print("sale order  values updated")
                     latest_channel.with_user(odoo_bot_user).message_post(
-                        body="All the data is successfully updated in the Odoo",
+                        body="All the data is successfully updated in the Odoo. Please type \"revert\" if you want to revert the changes",
                         message_type='comment',
                         subtype_xmlid='mail.mt_comment')
                     latest_channel.with_user(odoo_bot_user).message_post(
@@ -378,6 +397,93 @@ class Channel(models.Model):
                         message_type='comment',
                         subtype_xmlid='mail.mt_comment')
                     self.process_tracker = "sale_orders_tracking"
+
+            if self.process_tracker == "sale_orders_tracking":
+                if latest_message.lower() == "revert":
+                    print("sale order lines:", self.sale_order_line_revert)
+                    # original_sale_order = self.original_sale_order
+                    # original_sale_order_line = self.original_sale_order_line
+                    original_sale_order = self.sale_order_revert
+                    original_sale_order_line = self.sale_order_line_revert
+                    pattern_id = r"'id': (\d+)"
+                    match_id = re.search(pattern_id, original_sale_order)
+                    if match_id:
+                        order_id = int(match_id.group(1))
+                        print(order_id)
+                    else:
+                        print("id not found in the string")
+                    pattern_commitment_date = r"'commitment_date': datetime\.datetime\((\d+), (\d+), (\d+), (\d+), (\d+)\)"
+                    match_commitment_date = re.search(pattern_commitment_date, original_sale_order)
+                    if match_commitment_date:
+                        year, month, day, hour, minute = map(int, match_commitment_date.groups())
+                        commitment_date = datetime(year, month, day, hour, minute)
+                        print("commitment_date", commitment_date)
+                        self.update_sale_order(order_id, "commitment_date", commitment_date)
+                    else:
+                        print("commitment_date not found in the string")
+
+
+                    # ORDER_LINES
+                    pattern_order_id = r"'order_id': \((\d+), '.*'\)"
+                    match = re.search(pattern_order_id, original_sale_order_line)
+                    # If a match is found, extract the order_id
+                    if match:
+                        order_id = int(match.group(1))
+                        print(order_id)
+                    else:
+                        print("order_id not found in the string")
+
+                    pattern_product_id = r"'product_id': \((\d+), '.*'\)"
+                    match = re.search(pattern_product_id, original_sale_order_line)
+                    # If a match is found, extract the product_id
+                    if match:
+                        product_id = int(match.group(1))
+                        print(product_id)
+                    else:
+                        print("product_id not found in the string")
+
+                    pattern_product_uom_qty = r"'product_uom_qty': (\d+)"
+                    match = re.search(pattern_product_uom_qty, original_sale_order_line)
+                    # If a match is found, extract the product_uom_qty
+                    if match:
+                        product_uom_qty = int(match.group(1))
+                        print(product_uom_qty)
+                    else:
+                        print("product_uom_qty not found in the string")
+
+                    pattern_price_unit = r"'price_unit': (\d+)"
+                    match = re.search(pattern_price_unit, original_sale_order_line)
+                    # If a match is found, extract the price_unit
+                    if match:
+                        price_unit = int(match.group(1))
+                        print(price_unit)
+                    else:
+                        print("price_unit not found in the string")
+
+                    self.update_sale_order_line(order_id, product_id, "product_uom_qty", product_uom_qty)
+                    self.update_sale_order_line(order_id, product_id, "price_unit", price_unit)
+
+
+
+
+                    # for index, row in original_sale_order.iterrows():
+                    #     order_id = row['id']
+                    #     original_commitment_date = row['commitment_date']
+                    #     # fix for this error in original_commitment_date: time data '10/13/2023' does not match format '%Y-%m-%d'
+                    #     # original_commitment_date = datetime.strptime(original_commitment_date, '%m/%d/%Y').strftime(
+                    #     #     '%Y-%m-%d')
+                    #     print("original_commitment_date: ", original_commitment_date)
+                    #     self.update_sale_order(order_id, "commitment_date", original_commitment_date)
+
+                    # for index, row in original_sale_order_line.iterrows():
+                    #     order_id = row['order_id']
+                    #     product_id = row['product_id']
+                    #     original_qty = row['product_uom_qty']
+                    #     original_price_unit = row['price_unit']
+                    #     self.update_sale_order_line(order_id, product_id, "product_uom_qty", original_qty)
+                    #     self.update_sale_order_line(order_id, product_id, "price_unit", original_price_unit)
+
+
 
 
             if self.process_tracker == "sale_orders_tracking":
